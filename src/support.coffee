@@ -30,10 +30,26 @@ termColor = (code = '') -> '\x1B' + '[' + code + 'm'
 
 # ---
 
-minimatch = require 'minimatch'
+globToRegex = (glob) ->
+  specialChars = "\\^$*+?.()|{}[]"
+  regexChars = ['^']
+  for c in glob
+    switch c
+      when '*' then regexChars.push('.*')
+      when '?' then regexChars.push('.')
+      else if specialChars.indexOf(c) isnt -1
+        regexChars.push('\\' + c)
+      else
+        regexChars.push(c)
+  regexChars.push('$')
+  new RegExp(regexChars.join(''))
+
+matchesGlob = (path, glob) ->
+  regex = globToRegex(glob)
+  regex.test(path)
 
 @matchesGlobs = (path, globs) ->
-  matches = (match for glob in globs when minimatch path, glob, dot: true)
+  matches = (match for glob in globs when matchesGlob path, glob)
   matches.length isnt 0
 
 # ---
